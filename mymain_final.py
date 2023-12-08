@@ -27,7 +27,7 @@ def get_top_movies_by_rating(genre:str,ratings:pd.DataFrame,movies:pd.DataFrame)
 
     return merged[:10]
 
-# movies[movies['MovieID']==468]
+# movies[movies['MovieID']==1438]
 
 # S.iloc[:,454]
 def normalize_ratings(ratings):

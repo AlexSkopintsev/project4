@@ -23,7 +23,7 @@ session_state = SessionState(button_clicked=False)  # Initialize session state
 
 print(f'Starting State button_clicked = {session_state.button_clicked}')
 
-image_directory = '/Users/alex/Documents/Education/Master_Course_Illinois/PSL/Projects/Project4/MovieImages/'
+image_directory = './MovieImages/'
 
 @st.cache_data()
 def get_data():
@@ -33,29 +33,35 @@ def get_data():
 
 ratings,movies,S=get_data()
 
-@st.cache_data()
-def make_indexes_for_movie_id():
-    # R,similarity=mymain.compute_similarity(ratings)
-    mapper={}
-    for i in range(S.shape[1]):
-        # Get rid of m in front
-        idx=int(S.columns[i][1:])
-        mapper[idx]=i
-    
-    return mapper#,similarity
+# @st.cache_data()
+# def make_indexes_for_movie_id():
+#     # R,similarity=mymain.compute_similarity(ratings)
+#     mapper={}
+#     for i in range(S.shape[1]):
+#         # Get rid of m in front
+#         idx=int(S.columns[i][1:])
+#         mapper[idx]=i
+#     # print(mapper)
+#     return mapper#,similarity
 
 
-def make_new_user_rating(new_user_ratings:dict):
-    mapper=make_indexes_for_movie_id()
+def make_new_user_rating(new_user_ratings:dict,S):
+    # mapper=make_indexes_for_movie_id()
     # print('This is mapper')
     # print(mapper)
     hypothetical_ratings=np.zeros(3706)
     hypothetical_ratings[:]=np.nan
 
     for k,v in new_user_ratings.items():
-        hypothetical_ratings[mapper[k]]=len(v)
+        if len(v)==0:
+            rating=np.nan
+        else:
+            rating=len(v)
+        # hypothetical_ratings[mapper[k]]=rating
+        hypothetical_ratings[np.where(S.columns=='m'+str(k))]=rating
     
-    return mapper, hypothetical_ratings
+    # return mapper, hypothetical_ratings
+    return hypothetical_ratings
 
 genres = movies['Genres'].unique().tolist()
 
@@ -69,6 +75,12 @@ def get_image_filenames(genre):
 @st.cache_data()
 def get_random_filenames():
     return np.random.choice(movies['MovieID'], 10)
+
+# Another generator in case no movies were rated
+def get_random_filenames1():
+    return np.random.choice(movies['MovieID'], 10)
+
+
 
 def encode_images(image_filenames):
     images = []
@@ -122,7 +134,7 @@ def generate_rating_layout(image_filenames,scenario:str,movies):
                     if scenario=="Scenario II":
                         try:
                             st.markdown(f'<img src="data:image/jpg;base64,{col_images[image_idx]}" style="width:340px;height:450px;">', unsafe_allow_html=True)
-                            rating = st.selectbox(f"{movie_name}", ['★', '★★', '★★★', '★★★★', '★★★★★'])
+                            rating = st.selectbox(f"{movie_name}", ['','★', '★★', '★★★', '★★★★', '★★★★★'])
                             ratings[image_filenames[i + image_idx]] = rating
                         except:
                             placeholder = st.empty()
@@ -151,19 +163,24 @@ else:
     # else:
     if session_state.button_clicked == False:
         if st.sidebar.button("Make Reccomendation"):
-            # print('Clicked Button')
-            session_state.button_clicked = True
-            # print(f'Just Changed State button_clicked = {session_state.button_clicked}')
-            # print(final_ratings)
-            mapper,ratings_list=make_new_user_rating(final_ratings)
-            recommendation=mymain.myICBF(ratings_list,S,movies,ratings)
-            # print(recommendation)
-            # mapped_movie_ids=[]
-            # for i in recommendation:
-            #     mapped_movie_ids.append(get_movie_id_via_column_number(mapper,i))
-            # print('Generating Layout')
-            # st.empty()
-            st.header("Here are your suggestions. Enjoy!")
-            final_outline=generate_rating_layout(recommendation,'Scenario I',movies)
-            
-    
+            try:
+                # print('Clicked Button')
+                session_state.button_clicked = True
+                # print(f'Just Changed State button_clicked = {session_state.button_clicked}')
+                print(final_ratings)
+                # mapper,ratings_list=make_new_user_rating(final_ratings,S)
+                ratings_list=make_new_user_rating(final_ratings,S)
+                recommendation=mymain.myICBF(ratings_list,S,movies,ratings)
+                # print(recommendation)
+                # mapped_movie_ids=[]
+                # for i in recommendation:
+                #     mapped_movie_ids.append(get_movie_id_via_column_number(mapper,i))
+                # print('Generating Layout')
+                # st.empty()
+                st.header("Here are your suggestions. Enjoy!")
+                final_outline=generate_rating_layout(recommendation,'Scenario I',movies)
+            except:
+                # No ratings were made. Generate random
+                st.header("You did not rate anything. Here are random choices for you :)")   
+                image_filenames = get_random_filenames1()
+                final_ratings=generate_rating_layout(image_filenames,'Scenario I',movies)
