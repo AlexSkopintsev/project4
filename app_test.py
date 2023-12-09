@@ -81,7 +81,7 @@ def get_random_filenames1():
     return np.random.choice(movies['MovieID'], 10)
 
 
-
+# Make sure to encode immages so that they can be used in html
 def encode_images(image_filenames):
     images = []
     for filename in image_filenames:
@@ -94,16 +94,16 @@ def encode_images(image_filenames):
             images.append('None')
     return images
 
-def get_movie_id_via_column_number(mapper,column_number:int):
-    """
-    This function makes sure that movie suggestion is mapped to the movie in the S matrix 
-    This is required because movie suggestion 454 is actually movie # 468
-    """
-    for key, value in mapper.items():
-        if value == column_number:
-            return key
-    # Return None if the value is not found in the dictionary
-    return None
+# def get_movie_id_via_column_number(mapper,column_number:int):
+#     """
+#     This function makes sure that movie suggestion is mapped to the movie in the S matrix 
+#     This is required because movie suggestion 454 is actually movie # 468
+#     """
+#     for key, value in mapper.items():
+#         if value == column_number:
+#             return key
+#     # Return None if the value is not found in the dictionary
+#     return None
 
 # Function to create a layout for rating movies
 def generate_rating_layout(image_filenames,scenario:str,movies):
