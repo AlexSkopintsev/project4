@@ -24,16 +24,48 @@ def get_movies_by_genre(genre:str,movies:pd.DataFrame):
 # genre='Drama'
 def get_top_movies_by_rating(genre:str,ratings:pd.DataFrame,movies:pd.DataFrame):
     all_movies=get_movies_by_genre(movies=movies,genre=genre)
-    merged=pd.merge(all_movies[['MovieID','Title']],
+    merged=pd.merge(all_movies[['MovieID','Title','Genres']],
                     ratings[['MovieID','Rating']],on='MovieID')
     
-    merged=merged.groupby(['Title','MovieID'])['Rating']\
+    merged=merged.groupby(['Title','MovieID','Genres'])['Rating']\
         .mean().sort_values(ascending=False)
 
     return pd.DataFrame(merged[:10]).reset_index()
 
 
 ratings,movies=read_data()
+
+distinct_genre=movies['Genres'].unique()
+
+top_movies_by_genre=pd.DataFrame()
+
+for genre in distinct_genre:
+    top_movies_by_genre=pd.concat([top_movies_by_genre,get_top_movies_by_rating(genre,ratings,movies)])
+
+top_movies_by_genre.to_csv('top_movies_by_genre.csv',index=False)
+
+
+merged=pd.merge(movies[['MovieID','Title','Genres']],ratings[['MovieID','Rating']],on='MovieID')
+
+top_10_per_genre=merged.groupby(['Title','Genres'])['Rating'].mean().reset_index()
+top_10_per_genre=top_10_per_genre.groupby(['Title','Genres']).\
+    apply(lambda x:x.nlargest(10,'Rating')).reset_index(drop=True)
+
+
+# Function to sort and get top 10
+def get_top_10(group):
+    # return group.sort_values('Rating', ascending=False).head(10)
+    return group.nlargest(10, 'Rating')
+
+top_10_per_genre=merged.groupby(['Title','Genres'])['Rating'].mean().reset_index()
+
+top_10_per_genre=merged.groupby('Genres').apply(get_top_10).reset_index(level=0, drop=True)
+
+top_10_per_genre[top_10_per_genre['Genres']=='Drama']
+
+merged
+
+
 
 # get_movies_by_genre('Comedy',movies)
 # get_top_movies_by_rating('Comedy',ratings,movies)

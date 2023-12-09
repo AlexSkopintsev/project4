@@ -27,11 +27,15 @@ image_directory = './MovieImages/'
 
 @st.cache_data()
 def get_data():
+    """
+    Gets different data required throughout application and caches it
+    """
     ratings, movies = mymain.read_data()
     S=pd.read_csv('./S.csv')
-    return ratings,movies,S
+    top_movies_by_genre=pd.read_csv('./top_movies_by_genre.csv')
+    return ratings,movies,S,top_movies_by_genre
 
-ratings,movies,S=get_data()
+ratings,movies,S,top_movies_by_genre=get_data()
 
 # @st.cache_data()
 # def make_indexes_for_movie_id():
@@ -67,8 +71,9 @@ genres = movies['Genres'].unique().tolist()
 
 # Function to retrieve image filenames based on selected genre
 # genre='Action'
-def get_image_filenames(genre):
-    image_filenames = mymain.get_top_movies_by_rating(genre=genre, movies=movies, ratings=ratings)
+def get_image_filenames(genre,top_movies_by_genre):
+    # image_filenames = mymain.get_top_movies_by_rating(genre=genre, movies=movies, ratings=ratings)
+    image_filenames=top_movies_by_genre[top_movies_by_genre['Genres']==genre]['MovieID']
     image_filenames = pd.DataFrame(image_filenames).reset_index()['MovieID'].tolist()
     return image_filenames
 
@@ -149,7 +154,7 @@ if selected_scenario == 'Scenario I':
     st.sidebar.write("Select Genre:")
     selected_genre = st.sidebar.selectbox('Genres', genres)
     if selected_genre:
-        image_filenames = get_image_filenames(selected_genre)
+        image_filenames = get_image_filenames(selected_genre,top_movies_by_genre)
         final_ratings=generate_rating_layout(image_filenames,'Scenario I',movies)
 else:
     # Define session state to persist button state across Streamlit runs
@@ -170,7 +175,7 @@ else:
                 print(final_ratings)
                 # mapper,ratings_list=make_new_user_rating(final_ratings,S)
                 ratings_list=make_new_user_rating(final_ratings,S)
-                recommendation=mymain.myICBF(ratings_list,S,movies,ratings)
+                recommendation=mymain.myICBF(ratings_list,S,top_movies_by_genre)
                 # print(recommendation)
                 # mapped_movie_ids=[]
                 # for i in recommendation:

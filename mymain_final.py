@@ -62,7 +62,7 @@ def make_new_user_rating(new_user_ratings:dict):
     
 
 
-def myICBF(user,S,movies,ratings):
+def myICBF(user,S,top_movies_by_genre):
     numerator = np.sum(S * user,axis=1)
 
     user2 = user.copy()
@@ -93,7 +93,8 @@ def myICBF(user,S,movies,ratings):
         # recommendations=pred.iloc[:length]
 
         # get top 10-length movies by a genre Comedy:
-        recommendations=get_top_movies_by_rating('Comedy',ratings,movies)['MovieID'].iloc[:10-length]
+        # recommendations=get_top_movies_by_rating('Comedy',ratings,movies)['MovieID'].iloc[:10-length]
+        recommendations=top_movies_by_genre[top_movies_by_genre['Genres']=='Comedy']['MovieID'].iloc[:10-length]
         
         pred=[int(i[1:]) for i in pred.index]
 
